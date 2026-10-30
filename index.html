@@ -1,0 +1,639 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Колоквіум · Варіант</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#1f5fbf">
+<meta name="mobile-web-app-capable" content="yes">
+<!-- iOS: без цього «На екран Домівки» відкривається у звичайному Safari з адресним рядком -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Колоквіум">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --ink:#15181d; --mut:#5c6471; --line:#dfe3e9;
+  --acc:#1f5fbf; --acc-soft:#eaf1fc; --warn-bg:#fff8e1; --warn-line:#e8c55a;
+  --note-bg:#eefaf3; --note-line:#49b07e; --fs:17px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121417; --card:#191c21; --ink:#e9ecf1; --mut:#99a2b0; --line:#2b3037;
+    --acc:#78aaff; --acc-soft:#1a2436; --warn-bg:#2b2412; --warn-line:#8a7430;
+    --note-bg:#132a20; --note-line:#2f7a58;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121417; --card:#191c21; --ink:#e9ecf1; --mut:#99a2b0; --line:#2b3037;
+  --acc:#78aaff; --acc-soft:#1a2436; --warn-bg:#2b2412; --warn-line:#8a7430;
+  --note-bg:#132a20; --note-line:#2f7a58;
+}
+*{box-sizing:border-box;-webkit-text-size-adjust:100%}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font:var(--fs)/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  overflow-x:hidden;
+  /* safe-area: у standalone-режимі на iPhone контент інакше лізе під «чубчик» і під смугу Home */
+  padding:env(safe-area-inset-top,0px)
+          calc(16px + env(safe-area-inset-right,0px))
+          calc(64px + env(safe-area-inset-bottom,0px))
+          calc(16px + env(safe-area-inset-left,0px));
+}
+.wrap{max-width:860px;margin:0 auto}
+header{padding:18px 0 10px}
+h1{font-size:1.25rem;margin:0 0 2px;letter-spacing:-.01em}
+.sub{color:var(--mut);font-size:.84rem;margin:0}
+
+/* ---- control bar ---- */
+.bar{
+  background:var(--bg);
+  padding:10px 0 12px;border-bottom:1px solid var(--line);margin-bottom:16px;
+}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+input[type=number]{
+  flex:1 1 120px;min-width:0;font-size:1.5rem;font-weight:700;text-align:center;
+  padding:10px 8px;border:2px solid var(--acc);border-radius:12px;
+  background:var(--card);color:var(--ink);-moz-appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+button{
+  font:inherit;font-size:.92rem;padding:10px 14px;border-radius:12px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;
+}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+button:active{transform:translateY(1px)}
+.mini{padding:8px 11px;font-size:.84rem}
+#timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:.95rem;
+  padding:8px 11px;border-radius:10px;background:var(--acc-soft);color:var(--acc);min-width:76px;text-align:center}
+#timer.hot{background:#ffe0e0;color:#b3261e}
+
+/* ---- cards ---- */
+.calc{font-size:.82rem;color:var(--mut);margin:10px 0 0;line-height:1.7}
+.calc code{background:var(--acc-soft);color:var(--acc);padding:1px 6px;border-radius:5px;font-size:.92em}
+.lvl{margin:26px 0 10px;font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:700}
+.lvl span{color:var(--acc)}
+.q{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 18px;margin-bottom:14px}
+.qh{display:flex;gap:10px;align-items:baseline;margin-bottom:10px}
+.num{flex:0 0 auto;background:var(--acc);color:#fff;font-weight:700;font-size:.8rem;
+  border-radius:8px;padding:3px 9px;line-height:1.4}
+.qt{font-weight:650;line-height:1.35}
+.q p{margin:.55em 0}
+.q ul,.q ol{margin:.5em 0;padding-left:1.3em}
+.q li{margin:.25em 0}
+.box{background:var(--acc-soft);border-left:3px solid var(--acc);border-radius:0 10px 10px 0;padding:10px 12px;margin:.7em 0}
+.note{background:var(--note-bg);border-left:3px solid var(--note-line);border-radius:0 10px 10px 0;padding:10px 12px;margin:.7em 0;font-size:.92em}
+.warn{background:var(--warn-bg);border-left:3px solid var(--warn-line);border-radius:0 10px 10px 0;padding:10px 12px;margin:.7em 0;font-size:.92em}
+.note b,.warn b{display:block;font-size:.8em;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;opacity:.75}
+.lbl{font-weight:650}
+.eq{display:block;overflow-x:auto;overflow-y:hidden;padding:.45em 0;text-align:center;line-height:2.1}
+.eq.l{text-align:left}
+.qed{float:right;font-size:1.1em}
+.tip{color:var(--mut);font-size:.88em}
+
+/* ---- math primitives ---- */
+i{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-size:1.06em}
+.bn{white-space:nowrap;display:inline-block}
+.ss{display:inline-block;vertical-align:-.42em;line-height:1;font-size:.68em;text-align:left;margin-left:.04em}
+.ss>sup,.ss>sub{display:block;position:static;font-size:1em;line-height:1.08;margin:0;white-space:nowrap}
+.ss sub sub,.ss sub sup,.ss sup sub,.ss sup sup{display:inline;font-size:.8em}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;font-size:.92em;margin:0 .15em}
+.frac>span{padding:0 .35em}
+.frac>span:first-child{border-bottom:1.3px solid currentColor}
+.rad{display:inline-block;white-space:nowrap}
+.rad>sup{font-size:.62em;margin-right:-.42em;vertical-align:.72em}
+.rb{border-top:1.3px solid currentColor;padding:0 .18em 0 .1em}
+.sum{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;
+  font-size:.62em;line-height:1.05;margin:0 .2em}
+.sum>.sg{font-size:2.1em;line-height:.9}
+.ov{border-top:1.3px solid currentColor}
+
+/* ---- misc ---- */
+.empty{color:var(--mut);text-align:center;padding:40px 10px;font-size:.95rem}
+.egg{margin:52px auto 0;width:max-content;text-align:center;line-height:.92;user-select:none;
+  font-family:Georgia,"Times New Roman",serif;color:var(--ink);opacity:.28;
+  transition:opacity .35s ease,transform .35s ease}
+.egg:hover,.egg:active{opacity:1;transform:scale(1.06)}
+.egg .r1{font-size:2.7rem;font-weight:700;letter-spacing:.08em}
+.egg .r1 b{color:#e0232e;font-weight:400;font-family:-apple-system,"Segoe UI Symbol",sans-serif;
+  font-size:1.34em;line-height:1;vertical-align:-.07em}
+.egg .r2{font-size:1.45rem;font-weight:700;letter-spacing:.16em;margin-top:.14em}
+footer code{background:var(--acc-soft);color:var(--acc);padding:1px 5px;border-radius:5px}
+footer{color:var(--mut);font-size:.8rem;text-align:center;margin-top:34px;line-height:1.7}
+@media (max-width:420px){ .qh{flex-wrap:wrap} }
+@media print{
+  body{background:#fff;color:#000;padding:0;--fs:12px}
+  .bar,footer,.noprint{display:none!important}
+  .q{break-inside:avoid;border:1px solid #999;margin-bottom:8px;padding:8px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Колоквіум · дискретна математика</h1>
+  <p class="sub">Введи номер варіанту — отримаєш свої 6 питань з відповідями.</p>
+</header>
+
+<div class="bar">
+  <div class="row">
+    <input id="k" type="number" inputmode="numeric" pattern="[0-9]*" min="1" max="100" placeholder="k">
+    <button class="primary" id="go">Порахувати</button>
+    <span id="timer">7:00</span>
+  </div>
+  <div class="row" style="margin-top:8px">
+    <button class="mini" id="tstart">▶ Таймер 7 хв</button>
+    <button class="mini" id="fminus">A−</button>
+    <button class="mini" id="fplus">A+</button>
+    <button class="mini" id="print">🖨 Друк</button>
+    <button class="mini" id="all">Усі питання</button>
+  </div>
+  <div class="calc" id="calc"></div>
+</div>
+
+<div id="out"><p class="empty">↑ Введи число від 1 до 100</p></div>
+
+<div class="egg noprint" aria-hidden="true">
+  <div class="r1">I <b>♥</b></div>
+  <div class="r2">KINSTROER</div>
+</div>
+
+</div>
+<script>
+/* ---------- math helpers ---------- */
+const C=(n,k)=>`<span class="bn"><i>C</i><span class="ss"><sup>${k}</sup><sub>${n}</sub></span></span>`;
+const A=(n,k)=>`<span class="bn"><i>A</i><span class="ss"><sup>${k}</sup><sub>${n}</sub></span></span>`;
+const P=n=>`<i>P</i><sub>${n}</sub>`;
+const s=(x,i)=>`<i>${x}</i><sub>${i}</sub>`;
+const f=(a,b)=>`<span class="frac"><span>${a}</span><span>${b}</span></span>`;
+const rt=(idx,x)=>`<span class="rad"><sup>${idx}</sup>√<span class="rb">${x}</span></span>`;
+const sum=(top,bot)=>`<span class="sum"><span>${top}</span><span class="sg">∑</span><span>${bot}</span></span>`;
+const eq=x=>`<span class="eq">${x}</span>`;
+const eql=x=>`<span class="eq l">${x}</span>`;
+const QED='<span class="qed">∎</span>';
+const D='<span class="lbl">La definicion.</span> ';
+const O='<span class="lbl">La observacion.</span> ';
+const N='<span class="lbl">La notacion.</span> ';
+const DEM='<span class="lbl">La demostracion.</span> ';
+
+/* ================= NIVEL 1 — означення ================= */
+const N1=[,
+/*1*/{t:'Підмножина',a:`
+<p>${D}Будемо казати, що <i>A</i> є <b>підмножиною</b> <i>B</i>, якщо будь-який елемент <i>A</i> є елементом <i>B</i> (навпаки необов'язково).</p>
+<p>${N}<i>A</i> ⊆ <i>B</i>.</p>`},
+/*2*/{t:'Власна підмножина',a:`
+<p>${D}<i>A</i> називається <b>власною підмножиною</b> <i>B</i> ⇔ одночасно виконується:</p>
+${eq(`<i>A</i> ⊆ <i>B</i> &nbsp;&nbsp;та&nbsp;&nbsp; <i>A</i> ≠ <i>B</i>`)}
+<p>(інакше кажучи, в <i>B</i> входить множина <i>A</i> та ще якісь — хоча б один — «зайві» елементи).</p>
+<p>${O}Будь-яка власна підмножина автоматично є «просто» підмножиною.</p>
+<p>${N}<i>A</i> ⊂ <i>B</i>.</p>`},
+/*3*/{t:'Порожня множина',a:`
+<p>${D}<b>Порожня множина</b> — множина, яка НЕ містить жодного елементу.</p>
+<p>${N}Порожню множину позначають ∅.</p>`},
+/*4*/{t:'Універсальна множина',a:`
+<p>${D}<b>Універсальна множина</b> <i>X</i> — це така множина, яка містить усі елементи, де поняття «усі елементи» залежить від контексту (наприклад, якщо задача про натуральні числа, то в ролі <i>X</i> виступає ℕ).</p>`},
+/*5*/{t:'Перетин множин',a:`
+<p><b>Перетин</b> множин <i>A</i> і <i>B</i> — множина тих елементів, які належать <b>обом</b> множинам <i>A</i> і <i>B</i>:</p>
+${eq(`<i>A</i> ∩ <i>B</i> = {<i>x</i> ∣ <i>x</i> ∈ <i>A</i>, <i>x</i> ∈ <i>B</i>}`)}`},
+/*6*/{t:'Об’єднання множин',a:`
+<p><b>Об'єднання</b> множин <i>A</i> і <i>B</i> — множина тих елементів, які належать <b>хоча б одній</b> з множин:</p>
+${eq(`<i>A</i> ∪ <i>B</i> = {<i>x</i> ∣ <i>x</i> ∈ <i>A</i> або <i>x</i> ∈ <i>B</i>}`)}`},
+/*7*/{t:'Різниця множин',a:`
+<p><b>Різниця</b> множин <i>A</i> і <i>B</i> — множина тих елементів, які належать <i>A</i>, але НЕ належать <i>B</i>:</p>
+${eq(`<i>A</i> ∖ <i>B</i> = {<i>x</i> ∣ <i>x</i> ∈ <i>A</i>, <i>x</i> ∉ <i>B</i>}`)}`},
+/*8*/{t:'Симетрична різниця множин',a:`
+<p><b>Симетрична різниця</b> множин <i>A</i> і <i>B</i> — множина тих елементів, які належать <b>рівно одній</b> з двох множин:</p>
+${eq(`<i>A</i> Δ <i>B</i> = {<i>x</i> ∣ <i>x</i> ∈ <i>A</i>, <i>x</i> ∉ <i>B</i> АБО <i>x</i> ∉ <i>A</i>, <i>x</i> ∈ <i>B</i>}`)}
+${eq(`= {<i>x</i> ∣ або <i>x</i> ∈ <i>A</i>, або <i>x</i> ∈ <i>B</i>}`)}`},
+/*9*/{t:'Асоціативність перетину та об’єднання',a:`
+${eq(`<i>A</i> ∪ (<i>B</i> ∪ <i>C</i>) = (<i>A</i> ∪ <i>B</i>) ∪ <i>C</i>`)}
+${eq(`(<i>A</i> ∩ <i>B</i>) ∩ <i>C</i> = <i>A</i> ∩ (<i>B</i> ∩ <i>C</i>)`)}`},
+/*10*/{t:'Дистрибутивність об’єднання відносно перетину та навпаки',a:`
+${eq(`<i>A</i> ∩ (<i>B</i> ∪ <i>C</i>) = (<i>A</i> ∩ <i>B</i>) ∪ (<i>A</i> ∩ <i>C</i>)`)}
+${eq(`<i>A</i> ∪ (<i>B</i> ∩ <i>C</i>) = (<i>A</i> ∪ <i>B</i>) ∩ (<i>A</i> ∪ <i>C</i>)`)}`},
+/*11*/{t:'Декартів добуток множин (двох і k)',a:`
+<p>${D}<b>Декартів добуток</b> множин <i>A</i> і <i>B</i> — це множина впорядкованих пар, де перший елемент належить <i>A</i>, а другий <i>B</i>, тобто</p>
+${eq(`<i>A</i> × <i>B</i> = {(<i>a</i>, <i>b</i>) ∣ <i>a</i> ∈ <i>A</i>, <i>b</i> ∈ <i>B</i>}`)}
+<p>(інакше кажучи, множина всіх пар, де перший елемент з <i>A</i>, другий з <i>B</i>).</p>
+<p>${D}<b>Декартів добуток <i>k</i> множин</b> ${s('A',1)}, ${s('A',2)}, …, ${s('A','k')} — це множина впорядкованих наборів з <i>k</i> елементів, де перший елемент належить ${s('A',1)}, другий ${s('A',2)}, …, <i>k</i>-й елемент ${s('A','k')}:</p>
+${eq(`${s('A',1)} × ${s('A',2)} × ⋯ × ${s('A','k')} = {(${s('a',1)}, ${s('a',2)}, …, ${s('a','k')}) ∣ ${s('a',1)} ∈ ${s('A',1)}, ${s('a',2)} ∈ ${s('A',2)}, …, ${s('a','k')} ∈ ${s('A','k')}}`)}`},
+/*12*/{t:'Кортеж',a:`
+<p>${D}Елементи (${s('a',1)}, ${s('a',2)}, …, ${s('a','k')}) декартового добутку ${s('A',1)} × ${s('A',2)} × ⋯ × ${s('A','k')} називаються <b>векторами \\ впорядкованими наборами \\ кортежами</b> (всі три поняття — синоніми).</p>
+<p>${O}На відміну від множин, у кортежах <b>порядок МАЄ значення</b> та <b>повтори рахуються</b>.</p>`},
+/*13*/{t:`Перестановка та формула ${P('n')}`,a:`
+<p>${D}<b>Перестановкою</b> елементів множини <i>M</i>, де ∣<i>M</i>∣ = <i>n</i>, називається будь-який кортеж довжини <i>n</i>, у якому кожен елемент <i>M</i> трапляється рівно один раз.</p>
+<div class="box"><b>Тв.1.</b> Кіл-ть різних перестановок елементів множини <i>M</i>, де ∣<i>M</i>∣ = <i>n</i>, рівна <i>n</i>!</div>
+<p>${N}${P('n')} = <i>n</i>!</p>`},
+/*14*/{t:'Розміщення k елементів з n',a:`
+<p>${D}<b>Розміщенням <i>k</i> елементів</b> для множини <i>M</i>, де ∣<i>M</i>∣ = <i>n</i>, називається будь-який кортеж довжини <i>k</i>, який складається з елементів <i>M</i> та в якому елементи НЕ повторюються.</p>`},
+/*15*/{t:'Сполука k елементів з n',a:`
+<p>${D}<b>Сполукою <i>k</i> елементів</b> для множини <i>M</i>, де ∣<i>M</i>∣ = <i>n</i>, називається будь-яка <i>k</i>-елементна підмножина <i>M</i>.</p>`},
+/*16*/{t:'Перша властивість біноміальних коефіцієнтів',a:`
+<div class="box">${eq(`1) &nbsp; ${C('n','k')} = ${C('n','n−k')}`)}</div>`},
+/*17*/{t:'Четверта властивість біноміальних коефіцієнтів (знакозмінна сума «C-шек»)',a:`
+<div class="box">${eq(`4) &nbsp; ${C('n',0)} − ${C('n',1)} + ${C('n',2)} − ${C('n',3)} + ⋯ + (−1)<sup>n</sup>${C('n','n')} = ${sum('n','k=0')}(−1)<sup>k</sup>${C('n','k')} = 0`)}</div>`},
+/*18*/{t:`Значення ${C('n','k')} для k = 0, 1, n−1, n та k > n`,a:`
+${eq(`${C('n',0)} = 1, &nbsp;&nbsp; ${C('n',1)} = <i>n</i>, &nbsp;&nbsp; ${C('n','n−1')} = <i>n</i>, &nbsp;&nbsp; ${C('n','n')} = 1, &nbsp;&nbsp; ${C('n','k')} = 0, якщо <i>k</i> > <i>n</i>`)}
+<p class="tip">(${C('n','n−1')} = ${C('n','n−(n−1)')} = ${C('n',1)} = <i>n</i> — за першою властивістю.)</p>`},
+/*19*/{t:'Відповідність між множинами A і B',a:`
+<p>Нехай <i>A</i>, <i>B</i> — деякі множини.</p>
+<p>${D}<b>Відповідністю</b> між множинами <i>A</i> та <i>B</i> називається будь-яка підмножина декартового добутку <i>C</i> ⊆ <i>A</i> × <i>B</i>.</p>
+<p>(інакше кажучи, декартів добуток — це ВСІ можливі пари; відповідність — ДЕЯКІ пари)</p>`},
+/*20*/{t:'i-та проекція кортежу та i-та проекція підмножини декартового добутку',a:`
+<div class="warn"><b>Увага</b>На дошці iDroo означення проекції немає (ні в розділі «Декартів добуток та відповідності», ні далі). Його потрібно взяти з лекції або конспекту. Нижче — стандартне формулювання, звір із конспектом.</div>
+<p>${D}<b><i>i</i>-та проекція кортежу.</b> Нехай <i>a</i> = (${s('a',1)}, ${s('a',2)}, …, ${s('a','k')}) — кортеж. Тоді <i>i</i>-тою проекцією кортежу називається його <i>i</i>-та координата:</p>
+${eq(`<i>Pr</i><sub>i</sub> <i>a</i> = ${s('a','i')}`)}
+<p>${D}<b><i>i</i>-та проекція підмножини.</b> Нехай <i>V</i> ⊆ ${s('A',1)} × ${s('A',2)} × ⋯ × ${s('A','k')}. Тоді <i>i</i>-тою проекцією множини <i>V</i> називається множина <i>i</i>-тих координат усіх кортежів з <i>V</i>:</p>
+${eq(`<i>Pr</i><sub>i</sub> <i>V</i> = {${s('a','i')} ∣ (${s('a',1)}, …, ${s('a','k')}) ∈ <i>V</i>} ⊆ ${s('A','i')}`)}`},
+/*21*/{t:'Образ та прообраз елемента при відповідності C між A і B',a:`
+<p>Нехай є множини <i>A</i> і <i>B</i>, а <i>C</i> ⊆ <i>A</i> × <i>B</i> — відповідність між ними.</p>
+<p>${D}<b>Образ</b> елемента <i>a</i> ∈ <i>A</i> — це множина</p>
+${eq(`<i>C</i>(<i>a</i>) = {<i>b</i> ∣ <i>b</i> ∈ <i>B</i>, (<i>a</i>, <i>b</i>) ∈ <i>C</i>}`)}
+<p>(інакше кажучи, всі елементи <i>B</i>, у які йде стрілочка з <i>a</i>).</p>
+<p>${D}<b>Прообраз</b> <i>b</i> ∈ <i>B</i> — це множина</p>
+${eq(`<i>C</i><sup>−1</sup>(<i>b</i>) = {<i>a</i> ∣ <i>a</i> ∈ <i>A</i>, (<i>a</i>, <i>b</i>) ∈ <i>C</i>}`)}
+<p>(інакше кажучи, всі елементи <i>A</i>, з яких іде стрілочка в <i>b</i>).</p>`},
+/*22*/{t:'Функціональна та усюди визначена відповідність',a:`
+<p>Нехай <i>A</i>, <i>B</i> — деякі множини, <i>C</i> ⊆ <i>A</i> × <i>B</i> — відповідність між ними.</p>
+<p>Відповідність <i>C</i> називається <b>функціональною</b>, якщо ∀<i>a</i> ∈ <i>A</i> &nbsp; ∣<i>C</i>(<i>a</i>)∣ ≤ 1.</p>
+<p>Відповідність <i>C</i> називається <b>усюди визначеною</b>, якщо ∀<i>a</i> ∈ <i>A</i> &nbsp; ∣<i>C</i>(<i>a</i>)∣ ≥ 1.</p>`},
+/*23*/{t:'Ін’єктивна та сюр’єктивна відповідність',a:`
+<p>Нехай <i>A</i>, <i>B</i> — деякі множини, <i>C</i> ⊆ <i>A</i> × <i>B</i> — відповідність між ними.</p>
+<p>Відповідність <i>C</i> називається <b>ін'єктивною</b>, якщо ∀<i>b</i> ∈ <i>B</i> &nbsp; ∣<i>C</i><sup>−1</sup>(<i>b</i>)∣ ≤ 1.</p>
+<p>Відповідність <i>C</i> називається <b>сюр'єктивною</b>, якщо ∀<i>b</i> ∈ <i>B</i> &nbsp; ∣<i>C</i><sup>−1</sup>(<i>b</i>)∣ ≥ 1.</p>`}
+];
+
+/* ================= NIVEL 2 — приклади ================= */
+const N2=[,
+/*1*/{t:'Навести приклад нескінченних множин, перетин яких скінченний, та приклад двох нескінченних множин, перетин яких нескінченний',a:`
+<p><span class="lbl">Приклад, коли скінченний:</span></p>
+${eql(`<i>A</i> = {1, 2, 4, 6, 8, …}, &nbsp; <i>B</i> = {1, 3, 5, 7, …}, &nbsp; <i>A</i> ∩ <i>B</i> = {1}`)}
+<p><span class="lbl">Приклад, коли нескінченний:</span></p>
+${eql(`<i>A</i> = {2, 4, 6, 8, …}, &nbsp; <i>B</i> = {3, 6, 9, 12, …}, &nbsp; <i>A</i> ∩ <i>B</i> = {6, 12, 18, …}`)}`},
+/*2*/{t:'Навести приклад, коли A × B = B × A, та приклад, коли A × B ≠ B × A',a:`
+<p><span class="lbl">Приклад рівності</span> <i>A</i> × <i>B</i> = <i>B</i> × <i>A</i>: &nbsp; <i>A</i> = {1, 2}, <i>B</i> = {1, 2},</p>
+${eq(`<i>A</i> × <i>B</i> = {(1,1), (1,2), (2,1), (2,2)}`)}
+${eq(`<i>B</i> × <i>A</i> = {(1,1), (1,2), (2,1), (2,2)}`)}
+<p><span class="lbl">Приклад нерівності</span> <i>A</i> × <i>B</i> ≠ <i>B</i> × <i>A</i>: &nbsp; <i>A</i> = {1}, <i>B</i> = {2},</p>
+${eq(`<i>A</i> × <i>B</i> = {(1,2)}, &nbsp;&nbsp;&nbsp; <i>B</i> × <i>A</i> = {(2,1)}`)}`},
+/*3*/{t:'Навести приклад, коли твердження виконується, та приклад, коли НЕ виконується:  A ⊆ B, B ∈ C ⇒ A ⊆ C',a:`
+<p><span class="lbl">Приклад, коли виконується:</span> <i>A</i> = {1}, <i>B</i> = {1}, <i>C</i> = {1, {1}}.</p>
+${eql(`<i>A</i> ⊆ <i>B</i>, &nbsp; <i>B</i> ∈ <i>C</i>, &nbsp; <i>A</i> ⊆ <i>C</i>`)}
+<p><span class="lbl">Приклад, коли НЕ виконується:</span> <i>A</i> = {1}, <i>B</i> = {1, 2}, <i>C</i> = {{1, 2}}.</p>
+${eql(`<i>A</i> ⊆ <i>B</i>, &nbsp; <i>B</i> ∈ <i>C</i>, &nbsp; але <i>A</i> ⊄ <i>C</i> &nbsp;(бо 1 ∉ <i>C</i>)`)}`},
+/*4*/{t:'Навести приклад таких множин, що A ⊆ B̄ та B ⊆ Ā',a:`
+${eql(`<i>A</i> = {1, 2}, &nbsp; <i>B</i> = {3}, &nbsp; <i>X</i> = {1, 2, 3, 4}`)}
+${eql(`<span class="ov"><i>A</i></span> = {3, 4}, &nbsp; <span class="ov"><i>B</i></span> = {1, 2, 4}`)}
+<p class="tip">Перевірка: <i>A</i> = {1,2} ⊆ <span class="ov"><i>B</i></span> = {1,2,4} ✓ &nbsp;та&nbsp; <i>B</i> = {3} ⊆ <span class="ov"><i>A</i></span> = {3,4} ✓</p>`},
+/*5*/{t:'Навести приклад, коли твердження виконується, та приклад, коли НЕ виконується:  A ∩ B ⊆ C ⇒ A ⊆ C та B ⊆ C',a:`
+<p>Схема наслідку: «I тв. ⇒ II тв. та III тв.».</p>
+<p><span class="lbl">Приклад, коли виконується</span> (виконується I тв. та виконуються II та III): <i>A</i> = {1}, <i>B</i> = {2}, <i>C</i> = {1, 2}.</p>
+${eql(`<i>A</i> ∩ <i>B</i> = ∅ ⊆ <i>C</i>; &nbsp; <i>A</i> ⊆ <i>C</i>; &nbsp; <i>B</i> ⊆ <i>C</i>`)}
+<p><span class="lbl">Приклад, коли НЕ виконується</span> (I тв. виконується, а якесь з II та III — НЕ виконується): <i>A</i> = {1, 2}, <i>B</i> = {2, 3}, <i>C</i> = {2}.</p>
+${eql(`<i>A</i> ∩ <i>B</i> = {2} ⊆ <i>C</i>; &nbsp; але <i>A</i> ⊄ <i>C</i> &nbsp;(бо 1 ∉ <i>C</i>)`)}`},
+/*6*/{t:'Навести приклад такої множини A, що A ∈ A',a:`
+<div class="warn"><b>З вимог до колоквіуму</b>Це завдання розберуть <b>на консультації</b>, бо воно пов'язане з парадоксом теорії множин, який на лекціях не розбирали. На дошці розв'язку <b>немає</b>.</div>
+<p><span class="lbl">Що писати НЕ треба:</span> <i>A</i> = {<i>A</i>, <i>B</i>, <i>C</i>} — такий запис не спрацює, бо незрозуміло, чому так можна.</p>`},
+/*7*/{t:'Навести приклад відповідності, яка буде функцією та сюр’єкцією, але при цьому НЕ буде відображенням та НЕ буде ін’єкцією',a:`
+${eql(`<i>A</i> = {1, 2, 3, 4}, &nbsp; <i>B</i> = {5, 6}`)}
+${eq(`<i>C</i> = {(1,5), (2,5), (3,6)}`)}
+<div class="note"><b>Чому саме так</b>
+<b style="display:inline;text-transform:none;font-size:1em;letter-spacing:0">функція</b> (функціональна): кожен <i>a</i> має ≤ 1 образ ✓ &nbsp;·&nbsp;
+<b style="display:inline;text-transform:none;font-size:1em;letter-spacing:0">сюр'єкція</b>: кожен <i>b</i> ∈ {5,6} має ≥ 1 прообраз ✓<br>
+<b style="display:inline;text-transform:none;font-size:1em;letter-spacing:0">НЕ відображення</b>: не усюди визначена — у 4 немає образу &nbsp;·&nbsp;
+<b style="display:inline;text-transform:none;font-size:1em;letter-spacing:0">НЕ ін'єкція</b>: ∣<i>C</i><sup>−1</sup>(5)∣ = 2 (і 1, і 2 йдуть у 5)</div>
+<p class="tip">Схема стрілок: 1 → 5, &nbsp; 2 → 5, &nbsp; 3 → 6, &nbsp; 4 → (нікуди).</p>`},
+/*8*/{t:'Результати операцій ∪, ∩, ∖, Δ з порожньою множиною та універсальною множиною',a:`
+<div class="box">
+${eql(`<i>A</i> ∪ ∅ = <i>A</i> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>A</i> ∪ <i>X</i> = <i>X</i>`)}
+${eql(`<i>A</i> ∩ ∅ = ∅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>A</i> ∩ <i>X</i> = <i>A</i>`)}
+${eql(`<i>A</i> ∖ ∅ = <i>A</i> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>A</i> ∖ <i>X</i> = ∅`)}
+${eql(`∅ ∖ <i>A</i> = ∅ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>X</i> ∖ <i>A</i> = <span class="ov"><i>A</i></span>`)}
+${eql(`<i>A</i> Δ ∅ = <i>A</i> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <i>A</i> Δ <i>X</i> = <span class="ov"><i>A</i></span>`)}
+</div>`},
+/*9*/{t:'A = {a,b,c,d,e}, B = {1,2,3,4,5}. Навести приклад такої відповідності C між A і B, що Pr₁C = {a,c,d}, C⁻¹({4,5}) = {c}',a:`
+${eq(`<i>C</i> = {(<i>a</i>, 1), (<i>c</i>, 4), (<i>d</i>, 2)}`)}
+<div class="note"><b>Перевірка</b>
+<i>Pr</i><sub>1</sub><i>C</i> = {<i>a</i>, <i>c</i>, <i>d</i>} ✓ (перші координати всіх пар)<br>
+<i>C</i><sup>−1</sup>({4,5}) = {<i>c</i>} ✓ (у 4 йде лише <i>c</i>, у 5 не йде ніхто)</div>`}
+];
+
+/* ================= NIVEL 3 — нескладні доведення ================= */
+const N3=[,
+/*1*/{t:`Формула ${A('n','k')}`,a:`
+<div class="box"><b>Тв.2.</b> Кіл-ть різних розміщень <i>k</i> елементів множини <i>M</i>, де ∣<i>M</i>∣ = <i>n</i>, рівна
+${eq(`${A('n','k')} = ${f('<i>n</i>!','(<i>n</i> − <i>k</i>)!')} = <i>n</i> · (<i>n</i> − 1) · … · (<i>n</i> − <i>k</i> + 1)`)}</div>
+<p>${DEM}Намалюємо загальний шаблон кортежу розміщення <i>k</i> елементів:</p>
+${eq(`( …<sub class="tip">I м.</sub>, &nbsp; …<sub class="tip">II м.</sub>, &nbsp; … … , &nbsp; …<sub class="tip"><i>k</i>-те місце</sub> )`)}
+<p>Та почнемо його почергово заповнювати. Треба виконати процедуру — заповнити кортеж — яка складається з <i>k</i> дій (заповнити першу координату, заповнити другу, …, заповнити <i>k</i>-ту).</p>
+<p>Подивимось, скільки способів виконати кожну дію:</p>
+<ul>
+<li>заповнити <i>I</i> місце — <i>n</i> варіантів (можемо поставити довільний елемент <i>M</i>);</li>
+<li>заповнити <i>II</i> місце — (<i>n</i> − 1) варіант (довільний елемент <i>M</i>, окрім того, який уже стоїть на I місці);</li>
+<li>заповнити <i>III</i> місце — (<i>n</i> − 2) варіанти (окрім тих, які вже стоять на I та II місцях);</li>
+<li>…</li>
+<li>заповнити <i>k</i>-те місце — <i>n</i> − (<i>k</i> − 1) = <i>n</i> − <i>k</i> + 1 варіант (окрім тих, які вже стоять на I, II, …, (<i>k</i>−1)-му місцях).</li>
+</ul>
+<p>Тоді за правилом добутку варіантів заповнити кортеж у нас</p>
+${eq(`<i>n</i> · (<i>n</i>−1) · … · (<i>n</i>−<i>k</i>+1) = ${f('<i>n</i>(<i>n</i>−1) · … · (<i>n</i>−<i>k</i>+1)(<i>n</i>−<i>k</i>)(<i>n</i>−<i>k</i>−1) … · 2 · 1','(<i>n</i>−<i>k</i>)(<i>n</i>−<i>k</i>−1) … · 2 · 1')} = ${f('<i>n</i>!','(<i>n</i> − <i>k</i>)!')}`)}
+<div class="note"><b>Що тут зроблено</b>домножили й поділили вираз на (<i>n</i>−<i>k</i>)(<i>n</i>−<i>k</i>−1) … · 2 · 1</div>
+<p>Отже, ми отримали обидві формули для ${A('n','k')}, які вимагались. ${QED}</p>`},
+/*2*/{t:'Чому ММІ працює',a:`
+<p>Сформулюємо, що пояснимо в цьому блоці. Нехай у нас є задача (в якій щось треба довести для довільного значення параметра <i>n</i>), ми почали її розв'язувати за ММІ і успішно реалізували всі 4 етапи. Чому тоді задача може вважатись розв'язаною? Зараз це пояснимо.</p>
+<p>Припустимо, що це не так — і задача НЕ розв'язана. Це означає, що твердження задачі виконується НЕ для всіх значень параметра <i>n</i>. Серед усіх значень <i>n</i>, для яких твердження НЕ виконується, виберемо найменше та позначимо його ${s('n',0)}.</p>
+<p>${s('n',0)} ≠ 1, оскільки перевірена база — і для бази твердження виконується.</p>
+<p>${s('n',0)} ≠ 1 ⇒ ∃(${s('n',0)} − 1), де в поняття «існує» вкладається те, що замість <i>n</i> у твердженні можна підставляти (${s('n',0)} − 1).</p>
+<p>Тоді для (${s('n',0)} − 1) твердження <b>виконується</b>, оскільки ${s('n',0)} було вибрано найменшим, для якого НЕ виконується, тому для всіх менших значень параметра твердження зобов'язане виконуватись.</p>
+<p>Але тоді, з індукційного припущення та переходу, ми маємо, що, якщо твердження виконується для (${s('n',0)} − 1), то воно виконується й для (${s('n',0)} − 1) + 1 = ${s('n',0)} &nbsp;(∗).</p>
+<p>Однак ${s('n',0)} було вибрано найменшим числом, для яких твердження НЕ виконується, що суперечить (∗).</p>
+<p>Тому твердження доведене для всіх значень <i>n</i>. ${QED}</p>`},
+/*3*/{t:'Метод математичної індукції (описати шаблон)',a:`
+<p><span class="lbl">ММІ (нестрого)</span> — строга формалізація словосполучення «і так далі».</p>
+<p><span class="lbl">ММІ (строго)</span> — метод доведення математичних тверджень та задач, який складається з наступних етапів:</p>
+<div class="box">
+<p><b>0) Шаблон умови:</b> наявність параметра (найчастіше <i>n</i> ∈ ℕ).</p>
+<p><b>1) База індукції:</b> перевіряємо, що твердження працює для маленьких значень параметра (найчастіше для <i>n</i> = 1 або <i>n</i> = 1, 2).</p>
+<p><b>2) Індукційне припущення:</b> припускаємо, що твердження працює для певного значення параметра <i>n</i> = <i>k</i>.</p>
+<p><b>3) Індукційний перехід:</b> доводимо, що тоді твердження виконується й для наступного значення параметра <i>n</i> = <i>k</i> + 1, використовуючи під час доведення індукційне припущення.</p>
+</div>
+<p><span class="lbl">Вимоги \\ рекомендації до оформлення ММІ:</span></p>
+<ol>
+<li>початок індукційного переходу має починатися зі слів «доведемо, що…», після чого має бути ДОСИМВОЛЬНО переписане індукційне припущення (те, що після слів «припустимо, що …»), тільки в кожному місці <i>k</i> має бути замінене на (<i>k</i> + 1);</li>
+<li>формулювати індукційне припущення якомога повніше та з якомога меншою кіл-тю займенників.</li>
+</ol>`},
+/*4*/{t:'Друга властивість біноміальних коефіцієнтів, обидва доведення',a:`
+<div class="box">${eq(`2) &nbsp; ${C('n+1','k+1')} = ${C('n','k+1')} + ${C('n','k')}`)}</div>
+<p><span class="lbl">Алгебраїчне доведення:</span></p>
+${eq(`ЛЧ = ${C('n+1','k+1')} = ${f('(<i>n</i>+1)!','(<i>k</i>+1)! ((<i>n</i>+1) − (<i>k</i>+1))!')} = ${f('(<i>n</i>+1)!','(<i>k</i>+1)! (<i>n</i>+1−<i>k</i>−1)!')} = ${f('(<i>n</i>+1)!','(<i>k</i>+1)! (<i>n</i>−<i>k</i>)!')}`)}
+${eq(`ПЧ = ${C('n','k+1')} + ${C('n','k')} = ${f('<i>n</i>!','(<i>k</i>+1)! (<i>n</i>−(<i>k</i>+1))!')} + ${f('<i>n</i>!','<i>k</i>! (<i>n</i>−<i>k</i>)!')} = ${f('<i>n</i>!','(<i>k</i>+1)! (<i>n</i>−<i>k</i>−1)!')} + ${f('<i>n</i>!','<i>k</i>! (<i>n</i>−<i>k</i>)!')} =`)}
+<div class="note"><b>зводимо до спіл. знам.</b>
+серед «перших» фактор. більший (<i>k</i>+1)!<br>
+серед «других» більший (<i>n</i>−<i>k</i>)!<br>
+Спільний знаменник = добуток «більших» факт. = (<i>k</i>+1)! (<i>n</i>−<i>k</i>)!<br>
+Першому знаменнику «не вистачає» множника (<i>n</i>−<i>k</i>), треба домн. на нього<br>
+Другому — не вистачає (<i>k</i>+1)</div>
+${eq(`= ${f('<i>n</i>! (<i>n</i>−<i>k</i>)','(<i>k</i>+1)! (<i>n</i>−<i>k</i>−1)! (<i>n</i>−<i>k</i>)')} + ${f('<i>n</i>! (<i>k</i>+1)','<i>k</i>! (<i>k</i>+1) (<i>n</i>−<i>k</i>)!')} =`)}
+${eq(`= ${f('<i>n</i>! (<i>n</i>−<i>k</i>) + <i>n</i>! (<i>k</i>+1)','(<i>k</i>+1)! (<i>n</i>−<i>k</i>)!')} = ${f('<i>n</i>! (<i>n</i>−<i>k</i>+<i>k</i>+1)','(<i>k</i>+1)! (<i>n</i>−<i>k</i>)!')} = ${f('<i>n</i>! (<i>n</i>+1)','(<i>k</i>+1)! (<i>n</i>−<i>k</i>)!')} = ${f('(<i>n</i>+1)!','(<i>k</i>+1)! (<i>n</i>−<i>k</i>)!')}`)}
+<p>ПЧ = ЛЧ. ${QED}</p>
+<p><span class="lbl">Комбінаторне доведення:</span> Розв'яжемо наступну задачу. Нехай в уругвайській школі є клас з (<i>n</i> + 1) учня і один із них Антоніо Монтальбан. Із них треба вибрати групу з (<i>k</i> + 1) чергового. Скільки способів це зробити?</p>
+<p><i>I</i> <span class="lbl">спосіб:</span> (в лоб) за означенням біном. коеф. вибрати (<i>k</i>+1) чергового з (<i>n</i>+1) учня рівно ${C('n+1','k+1')} способів.</p>
+<p><i>II</i> <span class="lbl">спосіб:</span> (через Антоніно Монтальбана) Порахуємо окремо групи чергових з А.М і без нього.</p>
+<p><span class="lbl">Групи з ним:</span> він черговий, значить із тих <i>n</i> учнів, що лишились, треба вибрати <i>k</i> чергових. Це зробити ${C('n','k')} варіантів.</p>
+<p><span class="lbl">Групи без нього:</span> він НЕ черговий, значить, із тих <i>n</i> учнів, що лишились, треба вибрати (<i>k</i>+1) чергового. Це зробити ${C('n','k+1')} варіантів.</p>
+<p>(Усі можливі групи з чергових) = (групи з А.М.) + (групи без А.М.) = ${C('n','k')} + ${C('n','k+1')}.</p>
+${eq(`<i>I</i> спосіб = <i>II</i> спосіб ⇒ ${C('n+1','k+1')} = ${C('n','k')} + ${C('n','k+1')}`)} ${QED}`},
+/*5*/{t:'Біном Ньютона',a:`
+<div class="box"><b>Біном Ньютона:</b>
+${eq(`(<i>a</i> + <i>b</i>)<sup>n</sup> = ${sum('n','k=0')} ${C('n','k')} <i>a</i><sup>n−k</sup><i>b</i><sup>k</sup> = <i>a</i><sup>n</sup> + ${C('n',1)}<i>a</i><sup>n−1</sup><i>b</i> + ${C('n',2)}<i>a</i><sup>n−2</sup><i>b</i><sup>2</sup> + ⋯ + ${C('n','n−1')}<i>ab</i><sup>n−1</sup> + <i>b</i><sup>n</sup>`)}</div>
+<p>${DEM}(<i>a</i>+<i>b</i>)<sup>n</sup> = (<i>a</i>+<i>b</i>)(<i>a</i>+<i>b</i>) … (<i>a</i>+<i>b</i>) &nbsp;(<i>n</i> разів).</p>
+<p>Як розкриваються дужки у цього добутку: беруться всі можливі комбінації «щось із <i>I</i> дужки» × «щось із <i>II</i> дужки» × … × «щось із <i>n</i>-ї дужки», де з кожної дужки береться або «<i>a</i>», або «<i>b</i>»; далі зводяться подібні та рахується коефіцієнт.</p>
+<p>Щоб отримати доданок <i>a</i><sup>n−k</sup><i>b</i><sup>k</sup>, треба з <i>k</i> дужок обрати <i>b</i>, а з інших (<i>n</i>−<i>k</i>) обрати <i>a</i>.</p>
+<p>Усього варіантів це зробити ${C('n','k')} (серед <i>n</i> дужок обираємо ті <i>k</i>, з яких «беремо» <i>b</i>; з інших (<i>n</i>−<i>k</i>) автоматично беремо <i>a</i>). Це і буде коефіцієнт при <i>a</i><sup>n−k</sup><i>b</i><sup>k</sup>, що і потрібно було довести. ${QED}</p>
+<p><span class="lbl">(<i>a</i>+<i>b</i>)<sup>5</sup>:</span></p>
+${eq(`(<i>a</i>+<i>b</i>)<sup>5</sup> = ${C(5,0)}<i>a</i><sup>5</sup> + ${C(5,1)}<i>a</i><sup>4</sup><i>b</i> + ${C(5,2)}<i>a</i><sup>3</sup><i>b</i><sup>2</sup> + ${C(5,3)}<i>a</i><sup>2</sup><i>b</i><sup>3</sup> + ${C(5,4)}<i>ab</i><sup>4</sup> + ${C(5,5)}<i>b</i><sup>5</sup>`)}`},
+/*6*/{t:'Третя властивість біноміальних коефіцієнтів, обидва доведення',a:`
+<div class="box">${eq(`3) &nbsp; ${sum('n','k=0')} ${C('n','k')} = ${C('n',0)} + ${C('n',1)} + ${C('n',2)} + ⋯ + ${C('n','n')} = 2<sup>n</sup>`)}</div>
+<p><span class="lbl">Алгебраїчне доведення (через біном):</span></p>
+${eq(`2<sup>n</sup> = (1+1)<sup>n</sup> = ${sum('n','k=0')} ${C('n','k')}1<sup>k</sup>1<sup>n−k</sup> = 1<sup>n</sup> + ${C('n',1)}1 · 1<sup>n−1</sup> + ${C('n',2)}1<sup>2</sup>1<sup>n−2</sup> + ⋯ + ${C('n','n−1')}1<sup>n−1</sup> · 1 + 1<sup>n</sup> =`)}
+${eq(`= ${C('n',0)} + ${C('n',1)} + ${C('n',2)} + ⋯ + ${C('n','n−1')} + ${C('n','n')}`)}
+<p><span class="lbl">Комбінаторне доведення:</span> Нехай є клас з <i>n</i> учнів. Кількох з них (довільну кіл-ть, можливо, всіх; можливо, жодного) потрібно відправити на олімпіаду. Скільки варіантів це зробити?</p>
+<p>${DEM}Обчислимо це число двома способами:</p>
+<p><i>I</i>-<span class="lbl">й спосіб (ракурс кіл-ті відправлених):</span> 0 учнів відправити на олімпіаду можна ${C('n',0)} способами, 1 учня — ${C('n',1)}, 2 учні — ${C('n',2)}, …, <i>n</i> учнів — ${C('n','n')}.</p>
+<p>(Усього способів) = (способи відправити 0 учнів) + (способи відпр. 1 учня) + ⋯ + (способи відпр. <i>n</i> учнів) = ${C('n',0)} + ${C('n',1)} + ⋯ + ${C('n','n')} способів.</p>
+<p><i>II</i>-<span class="lbl">й спосіб (ракурс кожного учня):</span> для кожного учня є два варіанти — або він їде на олімпіаду, або ні. Тому загалом варіантів</p>
+${eq(`2<sub class="tip">(I учень їде / не їде)</sub> · 2<sub class="tip">(II учень)</sub> · … · 2<sub class="tip">(<i>n</i>-й учень)</sub> &nbsp;(<i>n</i> разів) = 2<sup>n</sup>`)}
+${eq(`<i>I</i> спосіб = <i>II</i> спосіб ⇒ ${C('n',0)} + ${C('n',1)} + ${C('n',2)} + ⋯ + ${C('n','n')} = 2<sup>n</sup>`)} ${QED}`},
+/*7*/{t:`Формула ${C('n','k')}`,a:`
+<div class="box"><b>Тв.3.</b> Кіл-ть різних сполук <i>k</i> елементів множини <i>M</i>, де ∣<i>M</i>∣ = <i>n</i>, рівна
+${eq(`${C('n','k')} = ${f('<i>n</i>!','<i>k</i>! (<i>n</i>−<i>k</i>)!')} = ${f('<i>n</i>(<i>n</i>−1) … (<i>n</i>−<i>k</i>+1)','1 · 2 · … · <i>k</i>')}`)}</div>
+<p>${DEM}Покажемо, що ${A('n','k')} у <i>k</i>! разів більше за ${C('n','k')}.</p>
+<p>Для цього покажемо, що кожній сполуці відповідає рівно <i>k</i>! різних розміщень.</p>
+<p>Нехай <i>M</i> = {${s('a',1)}, ${s('a',2)}, …, ${s('a','n')}}. Розглянемо довільну <i>k</i>-елементну підмножину ${s('M',1)} ⊆ <i>M</i>: &nbsp; ${s('M',1)} = {<i>a</i><sub>i<sub>1</sub></sub>, <i>a</i><sub>i<sub>2</sub></sub>, …, <i>a</i><sub>i<sub>k</sub></sub>}.</p>
+<p>Розглянемо всі можливі перестановки елементів ${s('M',1)}:</p>
+${eq(`(<i>a</i><sub>i<sub>1</sub></sub>, <i>a</i><sub>i<sub>2</sub></sub>, …, <i>a</i><sub>i<sub>k</sub></sub>), &nbsp; (<i>a</i><sub>i<sub>2</sub></sub>, <i>a</i><sub>i<sub>1</sub></sub>, <i>a</i><sub>i<sub>3</sub></sub>, …, <i>a</i><sub>i<sub>k</sub></sub>), &nbsp; …, &nbsp; (<i>a</i><sub>i<sub>k</sub></sub>, <i>a</i><sub>i<sub>k−1</sub></sub>, …, <i>a</i><sub>i<sub>1</sub></sub>)`)}
+<p><b>Сполука</b> — це множина, тож у ній порядок елементів НЕ має значення, а тому всі ці перестановки відповідають одній і тій самій сполуці.</p>
+<p>У той же час <b>розміщення</b> — це кортеж, там порядок елементів МАЄ значення, тому всі ці перестановки відповідають різним кортежам і різним розміщенням.</p>
+<p>З тв.1 ми знаємо, що кіл-ть перестановок елементів ${s('M',1)} рівна <i>k</i>!, а отже, кожній сполуці відповідає рівно <i>k</i>! різних розміщень.</p>
+<p>Це означає, що (кіл-ть розміщень) = (кіл-ть сполук) · <i>k</i>!</p>
+${eq(`${A('n','k')} = ${C('n','k')} · <i>k</i>!`)}
+${eq(`${C('n','k')} = ${f(A('n','k'),'<i>k</i>!')} = ${f('<i>n</i>(<i>n</i>−1) … (<i>n</i>−<i>k</i>+1)','<i>k</i>!')} = ${f('<i>n</i>!','(<i>n</i>−<i>k</i>)! <i>k</i>!')}`)}
+<p>тож ми отримали обидві формули для ${C('n','k')}, які вимагались. ${QED}</p>`}
+];
+
+/* ================= NIVEL 4 — складні доведення ================= */
+const Ak=k=>`<i>A</i><sub>${k}</sub>`;
+const N4=[,
+/*1*/{t:'Нерівність Бернуллі',a:`
+<div class="box">Довести нерівність: &nbsp; (1 + <i>x</i>)<sup>n</sup> ≥ 1 + <i>nx</i> &nbsp;&nbsp; ∀<i>n</i> ∈ ℕ &nbsp;∀<i>x</i> ≥ −1.</div>
+<p><span class="lbl">Доведення</span> (за індукцією). <span class="lbl">Шаблон умови.</span> ✓ (параметр <i>n</i> ∈ ℕ)</p>
+<p><span class="lbl">База:</span> <i>n</i> = 1. &nbsp; (1+<i>x</i>)<sup>1</sup> ≥<sup class="tip">?</sup> 1 + 1 · <i>x</i> &nbsp; ∀<i>x</i> ≥ −1; &nbsp; 1 + <i>x</i> = 1 + <i>x</i>. ✓</p>
+<p><span class="lbl">Індукційне припущення:</span> припустимо, що для <i>n</i> = <i>k</i> нерівність справедлива, тобто (1+<i>x</i>)<sup>k</sup> ≥ 1 + <i>kx</i> &nbsp;∀<i>x</i> ≥ −1.</p>
+<p><span class="lbl">Індукційний перехід:</span> доведемо, що для <i>n</i> = <i>k</i>+1 нерівність справедлива, тобто (1+<i>x</i>)<sup>k+1</sup> ≥ 1 + (<i>k</i>+1)<i>x</i> &nbsp;∀<i>x</i> ≥ −1.</p>
+<p><span class="lbl">Доводимо:</span></p>
+${eq(`(1+<i>x</i>)<sup>k+1</sup> = (1+<i>x</i>)<sup>k</sup>(1+<i>x</i>) &nbsp; ≥<sub class="tip">інд.прип.</sub> &nbsp; (1 + <i>kx</i>)(1 + <i>x</i>)`)}
+<div class="note"><b>Зауваження (обов'язково)</b>Саме в цьому місці використовується, що <i>x</i> ≥ −1, тобто що 1 + <i>x</i> ≥ 0, бо для 1 + <i>x</i> &lt; 0 знак нерівності був би в інший бік (наприклад, 3 · (−2) ≱ 1 · (−2)).</div>
+<p>Для індукційного переходу тепер достатньо довести, що</p>
+${eq(`(1 + <i>kx</i>)(1 + <i>x</i>) ≥<sup class="tip">?</sup> 1 + (<i>k</i>+1)<i>x</i> &nbsp; ∀<i>x</i> ≥ −1`)}
+<p>Розкриваємо дужки:</p>
+${eq(`1 + <i>kx</i> + <i>x</i> + <i>kx</i><sup>2</sup> ≥<sup class="tip">?</sup> 1 + <i>kx</i> + <i>x</i>`)}
+${eq(`<i>kx</i><sup>2</sup> ≥ 0, &nbsp; що, очевидно, правда`)}
+<p>${QED}</p>`},
+/*2*/{t:'Поліноміальний коефіцієнт (доведення формули + тв.2)',a:`
+<p>Розв'яжемо наступну задачу.</p>
+<p>Нехай є множина <i>A</i> і ∣<i>A</i>∣ = <i>n</i>. Нехай є цілі невід'ємні числа ${s('k',1)}, ${s('k',2)}, …, ${s('k','m')} такі, що ${s('k',1)} + ${s('k',2)} + ⋯ + ${s('k','m')} = <i>n</i>. Скільки існує розбиттів множини <i>A</i> на <i>m</i> підмножин ${Ak(1)}, ${Ak(2)}, …, ${Ak('m')} таких, що ∣${Ak(1)}∣ = ${s('k',1)}, ∣${Ak(2)}∣ = ${s('k',2)}, …, ∣${Ak('m')}∣ = ${s('k','m')}?</p>
+<p><span class="lbl">Зауваж.</span> «Розбиття» = кожен елемент <i>A</i> «відправляється» рівно до однієї з множин ${Ak(1)}, ${Ak(2)}, …, ${Ak('m')}. Порядок множин має значення.</p>
+<p><span class="lbl">La solucion.</span> Треба виконати процедуру з <i>m</i> дій: вибрати елементи множини ${Ak(1)}, вибрати елементи мн. ${Ak(2)}, …, вибр. ел. множ. ${Ak('m')}.</p>
+<p>Аналізуємо, скільки варіантів виконати кожну дію:</p>
+<ul>
+<li>вибрати елементи ${Ak(1)}: ${C('n',s('k',1))} варіантів (усі <i>n</i> елементів доступні, треба вибрати ${s('k',1)});</li>
+<li>вибрати елементи ${Ak(2)}: ${C('n−k<sub>1</sub>',s('k',2))} варіантів (бо елементи ${Ak(1)} вибирати не можна);</li>
+<li>вибрати елементи ${Ak(3)}: ${C('n−k<sub>1</sub>−k<sub>2</sub>',s('k',3))} варіантів (не можна вибирати ${Ak(1)} та ${Ak(2)});</li>
+<li>…</li>
+<li>вибрати елементи ${Ak('m')}: ${C('n−k<sub>1</sub>−⋯−k<sub>m−1</sub>',s('k','m'))} = ${C(s('k','m'),s('k','m'))} варіантів (не можна вибрати елем. ${Ak(1)}, …, ${Ak('m−1')}).</li>
+</ul>
+<p>За правилом добутку способів виконати усю процедуру тоді:</p>
+${eq(`${C('n',s('k',1))} · ${C('n−k<sub>1</sub>',s('k',2))} · ${C('n−k<sub>1</sub>−k<sub>2</sub>',s('k',3))} ⋯ ${C('n−k<sub>1</sub>−⋯−k<sub>m−1</sub>',s('k','m'))} =`)}
+${eq(`= ${f('<i>n</i>!','(k<sub>1</sub>)! <s>(<i>n</i>−k<sub>1</sub>)!</s>')} · ${f('<s>(<i>n</i>−k<sub>1</sub>)!</s>','(k<sub>2</sub>)! <s>(<i>n</i>−k<sub>1</sub>−k<sub>2</sub>)!</s>')} · ${f('<s>(<i>n</i>−k<sub>1</sub>−k<sub>2</sub>)!</s>','(k<sub>3</sub>)! <s>(<i>n</i>−k<sub>1</sub>−k<sub>2</sub>−k<sub>3</sub>)!</s>')} ⋯`)}
+${eq(`⋯ ${f('<s>(<i>n</i>−k<sub>1</sub>−⋯−k<sub>m−1</sub>)!</s>','(k<sub>m</sub>)! (<i>n</i>−k<sub>1</sub>−⋯−k<sub>m−1</sub>−k<sub>m</sub>)!')} = ${f('<i>n</i>!','(k<sub>1</sub>)! (k<sub>2</sub>)! … (k<sub>m</sub>)!')}`)}
+<p class="tip">((<i>n</i> − ${s('k',1)} − ${s('k',2)} − ⋯ − ${s('k','m')})! = 0! = 1, бо ${s('k',1)} + ${s('k',2)} + ⋯ + ${s('k','m')} = <i>n</i>.)</p>
+<div class="box"><b>Озн.2.</b> Відповідь до цієї задачі і називають <b>поліноміальним коефіцієнтом</b> та позначають
+${eq(`<i>C</i><sub>n</sub>(${s('k',1)}, ${s('k',2)}, …, ${s('k','m')}) = ${C('n','k<sub>1</sub>,k<sub>2</sub>,…,k<sub>m</sub>')} = ${f('<i>n</i>!','(k<sub>1</sub>)! (k<sub>2</sub>)! … (k<sub>m</sub>)!')}`)}</div>
+<div class="box"><b>Тв.2.</b>
+${eq(`(${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','m')})<sup>n</sup> = ${sum('','k<sub>1</sub>+k<sub>2</sub>+⋯+k<sub>m</sub>=n')} ${C('n','k<sub>1</sub>,k<sub>2</sub>,…,k<sub>m</sub>')} <i>a</i><sub>1</sub><sup>k<sub>1</sub></sup><i>a</i><sub>2</sub><sup>k<sub>2</sub></sup> … <i>a</i><sub>m</sub><sup>k<sub>m</sub></sup> =`)}
+${eq(`= ${C('n','n,0,…,0')}<i>a</i><sub>1</sub><sup>n</sup> + ${C('n','n−1,1,0,…,0')}<i>a</i><sub>1</sub><sup>n−1</sup><i>a</i><sub>2</sub> + …`)}</div>
+<p>${DEM}Як розкриваються дужки такого добутку: беруться всі можливі комбінації «щось із I дужки» × «щось із II дужки» × ⋯ × «щось із <i>n</i>-ї дужки», де з кожної дужки береться ${s('a',1)}, ${s('a',2)}, …, ${s('a','m−1')} або ${s('a','m')}.</p>
+<p>Для того, щоб під час розкриття дужок (${s('a',1)} + ⋯ + ${s('a','m')})(${s('a',1)} + ⋯ + ${s('a','m')}) … (${s('a',1)} + ⋯ + ${s('a','m')}) отримати доданок <i>a</i><sub>1</sub><sup>k<sub>1</sub></sup><i>a</i><sub>2</sub><sup>k<sub>2</sub></sup> … <i>a</i><sub>m</sub><sup>k<sub>m</sub></sup>, потрібно:</p>
+<ul>
+<li>з якихось ${s('k',1)} дужок обрати ${s('a',1)};</li>
+<li>з якихось ${s('k',2)} — обрати ${s('a',2)};</li>
+<li>…</li>
+<li>з ${s('k','m')} обрати ${s('a','m')}.</li>
+</ul>
+<p>Тобто <i>n</i> дужок треба розбити на <i>m</i> груп, де в <i>I</i> групі ${s('k',1)} дужок, у <i>II</i> — ${s('k',2)}, …, у <i>m</i>-й — ${s('k','m')}.</p>
+<p>Усього варіантів це зробити якраз ${C('n','k<sub>1</sub>,k<sub>2</sub>,…,k<sub>m</sub>')}. ${QED}</p>`},
+/*3*/{t:'Формула включення-виключення',a:`
+<div class="box"><b>Формула включення — виключення для довільної кількості множин:</b> Нехай у нас є <i>k</i> скінченних множин ${Ak(1)}, ${Ak(2)}, …, ${Ak('k')}. Тоді:
+${eql(`∣${Ak(1)} ∪ ${Ak(2)} ∪ ⋯ ∪ ${Ak('k')}∣ = ∣${Ak(1)}∣ + ∣${Ak(2)}∣ + ⋯ + ∣${Ak('k')}∣ −`)}
+${eql(`&minus; ∣${Ak(1)} ∩ ${Ak(2)}∣ − ∣${Ak(1)} ∩ ${Ak(3)}∣ − ⋯ − ∣${Ak('k−1')} ∩ ${Ak('k')}∣ +`)}
+${eql(`+ ∣${Ak(1)} ∩ ${Ak(2)} ∩ ${Ak(3)}∣ + ∣${Ak(1)} ∩ ${Ak(2)} ∩ ${Ak(4)}∣ + ⋯ + ∣${Ak('k−2')} ∩ ${Ak('k−1')} ∩ ${Ak('k')}∣ −`)}
+${eql(`&minus; ∣${Ak(1)} ∩ ${Ak(2)} ∩ ${Ak(3)} ∩ ${Ak(4)}∣ − … &nbsp;&nbsp;…`)}
+${eql(`+ (−1)<sup>k−1</sup>∣${Ak(1)} ∩ ${Ak(2)} ∩ ⋯ ∩ ${Ak('k')}∣ = ${sum('','1≤i<sub>1</sub>&lt;i<sub>2</sub>&lt;⋯&lt;i<sub>s</sub>≤k')} (−1)<sup>s−1</sup> ∣<i>A</i><sub>i<sub>1</sub></sub> ∩ <i>A</i><sub>i<sub>2</sub></sub> ∩ ⋯ ∩ <i>A</i><sub>i<sub>s</sub></sub>∣`)}</div>
+<p>${DEM}Розіб'ємо універсальну множину на «шматочки», як ми це робили для 3 множин (шматочків буде 2<sup>k</sup>), та проаналізуємо кожен з них.</p>
+<p>Нехай ми аналізуємо шматочок, де <i>x</i> ∈ ${Ak(1)}, <i>x</i> ∈ ${Ak(2)}, …, <i>x</i> ∈ ${Ak('s')}, <i>x</i> ∉ ${Ak('s+1')}, …, <i>x</i> ∉ ${Ak('k')} (тобто шматок, де <i>x</i> належить деяким конкретним <i>s</i> множинам та НЕ належить іншим; зрозуміло, що аналіз таких шматків буде аналогічний незалежно від того, про які саме <i>s</i> множин йдеться; тому вважаємо, що це ${Ak(1)}, ${Ak(2)}, …, ${Ak('s')}).</p>
+<p><span class="lbl">ЛЧ:</span> такі елементи пораховані +1 раз.</p>
+<p><span class="lbl">ПЧ:</span> Аналізуємо, в яких множинах елемент цього шматка присутній та з яким знаком:</p>
+<ul>
+<li>там, де додаються ∣<i>A</i><sub>i</sub>∣: &nbsp; 1 + 1 + ⋯ + 1 = <i>s</i> = ${C('s',1)} (<i>s</i> разів);</li>
+<li>там, де віднімаються ∣<i>A</i><sub>i</sub> ∩ <i>A</i><sub>j</sub>∣: &nbsp; −∣${Ak(1)} ∩ ${Ak(2)}∣ − ∣${Ak(1)} ∩ ${Ak(3)}∣ − ⋯ − ∣${Ak('s−1')} ∩ ${Ak('s')}∣, тобто у тих перетинах, де перетинаються якісь з двох ${Ak(1)}, ${Ak(2)}, …, ${Ak('s')}. Тобто −1 − 1 − ⋯ − 1 (${C('s',2)}) = −${C('s',2)} разів;</li>
+<li>там, де додаються по три: &nbsp; +1 + 1 + ⋯ + 1 (${C('s',3)} разів) = ${C('s',3)};</li>
+<li>…</li>
+<li>там, де додаються \\ віднімаються по <i>s</i>: &nbsp; (−1)<sup>s−1</sup>${C('s','s')};</li>
+<li>там, де перетинаються <i>s</i> + 1 та більше: <b>0 разів</b> (у жодному перетині <i>x</i> немає).</li>
+</ul>
+<p>Усього: &nbsp; ${C('s',1)} − ${C('s',2)} + ${C('s',3)} − ⋯ + (−1)<sup>s−1</sup>${C('s','s')} = +1</p>
+<p class="tip">(з вл. 4: ${C('s',0)} − ${C('s',1)} + ${C('s',2)} − ⋯ + (−1)<sup>s</sup>${C('s','s')} = 0, тобто 1 = ${C('s',0)} = ${C('s',1)} − ${C('s',2)} + ${C('s',3)} − ⋯ + (−1)<sup>s−1</sup>${C('s','s')}.)</p>
+<p>Тобто і в правій частині ці <i>x</i> пораховані +1 раз.</p>
+<p><span class="lbl">Зауваж.</span> Для шматка <i>x</i> ∉ ${Ak(1)}, <i>x</i> ∉ ${Ak(2)}, …, <i>x</i> ∉ ${Ak('k')} зрозуміло, що і в ЛЧ, і в ПЧ ці елементи пораховані 0 разів. ${QED}</p>
+<p><span class="lbl">Формула включення-виключення для 4 множин:</span></p>
+${eql(`∣${Ak(1)} ∪ ${Ak(2)} ∪ ${Ak(3)} ∪ ${Ak(4)}∣ = ∣${Ak(1)}∣ + ∣${Ak(2)}∣ + ∣${Ak(3)}∣ + ∣${Ak(4)}∣`)}
+${eql(`&minus; ∣${Ak(1)}∩${Ak(2)}∣ − ∣${Ak(1)}∩${Ak(3)}∣ − ∣${Ak(1)}∩${Ak(4)}∣ − ∣${Ak(2)}∩${Ak(3)}∣ − ∣${Ak(2)}∩${Ak(4)}∣ − ∣${Ak(3)}∩${Ak(4)}∣`)}
+${eql(`+ ∣${Ak(1)}∩${Ak(2)}∩${Ak(3)}∣ + ∣${Ak(1)}∩${Ak(2)}∩${Ak(4)}∣ + ∣${Ak(1)}∩${Ak(3)}∩${Ak(4)}∣ + ∣${Ak(2)}∩${Ak(3)}∩${Ak(4)}∣`)}
+${eql(`&minus; ∣${Ak(1)}∩${Ak(2)}∩${Ak(3)}∩${Ak(4)}∣`)}`},
+/*4*/{t:'Нерівність Коші між середнім арифметичним та середнім геометричним',a:`
+<div class="box">∀<i>n</i> ∈ ℕ &nbsp;∀${s('a',1)}, ${s('a',2)}, …, ${s('a','n')} ≥ 0 виконується нерівність
+${eq(`${f(`${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','n')}`,'<i>n</i>')} ≥ ${rt('n',`${s('a',1)}${s('a',2)} … ${s('a','n')}`)}`)}
+<p>(ліва частина називається середнім арифметичним, права — середнім геометричним) (<i>AM</i> — arithmetic mean; <i>GM</i> — geometric mean).</p>
+<p>Причому рівність досягається тоді й лише тоді, коли ${s('a',1)} = ${s('a',2)} = ⋯ = ${s('a','n')}.</p></div>
+<p><span class="lbl">Зауваж.</span> Якщо хоча б одне з чисел ${s('a',1)}, …, ${s('a','n')} рівне нулю, то твердження очевидне. Надалі вважатимемо, що ${s('a',1)}, ${s('a',2)}, …, ${s('a','n')} &gt; 0.</p>
+<p>${DEM}(за індукцією). <span class="lbl">Шаблон умови.</span> ✓ (параметр <i>n</i> ∈ ℕ)</p>
+<p><span class="lbl">1. База індукції:</span> <i>n</i> = 1, 2.</p>
+${eq(`<i>n</i> = 1 : &nbsp; ${f(s('a',1),'1')} ≥ ${rt('1',s('a',1))} &nbsp; ∀${s('a',1)} &gt; 0. ✓`)}
+${eq(`<i>n</i> = 2 : &nbsp; ${f(`${s('a',1)} + ${s('a',2)}`,'2')} ≥<sup class="tip">?</sup> ${rt('',`${s('a',1)}${s('a',2)}`)}`)}
+${eq(`${s('a',1)} + ${s('a',2)} ≥<sup class="tip">?</sup> 2${rt('',`${s('a',1)}${s('a',2)}`)}`)}
+${eq(`${s('a',1)} − 2${rt('',`${s('a',1)}${s('a',2)}`)} + ${s('a',2)} ≥<sup class="tip">?</sup> 0`)}
+<p>(${rt('',s('a',1))} − ${rt('',s('a',2))})<sup>2</sup> ≥ 0 — правда, причому рівність досягається тоді й лише тоді, коли ${s('a',1)} = ${s('a',2)}. ✓</p>
+<p><span class="lbl">Індукційне припущення:</span> припустимо, що для <i>n</i> = <i>k</i> нерівність справедлива, тобто ∀${s('a',1)}, ${s('a',2)}, …, ${s('a','k')} &gt; 0 виконується нерівність</p>
+${eq(`${f(`${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','k')}`,'<i>k</i>')} ≥ ${rt('k',`${s('a',1)}${s('a',2)} … ${s('a','k')}`)}`)}
+<p>причому рівність досягається тоді й лише тоді, коли ${s('a',1)} = ${s('a',2)} = ⋯ = ${s('a','k')}.</p>
+<p><span class="lbl">Індукційний перехід:</span> доведемо, що для <i>n</i> = <i>k</i>+1 нерівність справедлива, тобто ∀${s('a',1)}, ${s('a',2)}, …, ${s('a','k+1')} &gt; 0 виконується нерівність</p>
+${eq(`${f(`${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','k+1')}`,'<i>k</i> + 1')} ≥ ${rt('k+1',`${s('a',1)}${s('a',2)} … ${s('a','k+1')}`)}`)}
+<p>причому рівність досягається тоді й лише тоді, коли ${s('a',1)} = ${s('a',2)} = ⋯ = ${s('a','k+1')}.</p>
+<p><span class="lbl">Доводимо:</span> введемо позначення:</p>
+${eq(`${Ak('k')} = ${f(`${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','k')}`,'<i>k</i>')}, &nbsp;&nbsp; ${Ak('k+1')} = ${f(`${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','k+1')}`,'<i>k</i> + 1')}`)}
+<div class="note"><b>з полів дошки</b>
+${eql(`${Ak('k')} = ${f(`${s('a',1)} + ⋯ + ${s('a','k')}`,'<i>k</i>')}; &nbsp;&nbsp; <i>k</i>${Ak('k')} = ${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','k')};`)}
+${eql(`${Ak('k+1')} = ${f(`${s('a',1)} + ⋯ + ${s('a','k+1')}`,'<i>k</i>+1')}; &nbsp;&nbsp; (<i>k</i>+1)${Ak('k+1')} = ${s('a',1)} + ${s('a',2)} + ⋯ + ${s('a','k+1')}`)}</div>
+<p>Помітимо, що припущення індукції тоді переписується як ${Ak('k')} ≥ ${rt('k',`${s('a',1)}${s('a',2)} … ${s('a','k')}`)}, а те, що треба довести в індукційному переході — як ${Ak('k+1')} ≥<sup class="tip">?</sup> ${rt('k+1',`${s('a',1)}${s('a',2)} … ${s('a','k+1')}`)}.</p>
+<p>Запишемо <b>нерівність Бернуллі</b> для <i>n</i> = (<i>k</i>+1) та <i>x</i> = ${f(Ak('k+1'),Ak('k'))} − 1:</p>
+${eq(`( 1 + ( ${f(Ak('k+1'),Ak('k'))} − 1 ) )<sup>k+1</sup> ≥ 1 + (<i>k</i>+1)( ${f(Ak('k+1'),Ak('k'))} − 1 )`)}
+<p>Зазначимо, що ${f(Ak('k+1'),Ak('k'))} − 1 &gt; −1, позаяк ${f(Ak('k+1'),Ak('k'))} &gt; 0, а тому нерівність Бернуллі можна застосовувати.</p>
+<p><span class="lbl">Перетворюємо написане:</span></p>
+${eq(`ЛЧ нер. Бернуллі: &nbsp; ( 1 + ( ${f(Ak('k+1'),Ak('k'))} − 1 ) )<sup>k+1</sup> = ( ${f(Ak('k+1'),Ak('k'))} )<sup>k+1</sup>`)}
+${eq(`ПЧ нер. Бернуллі: &nbsp; 1 + (<i>k</i>+1)( ${f(Ak('k+1'),Ak('k'))} − 1 ) = 1 + ${f(`(<i>k</i>+1)${Ak('k+1')}`,Ak('k'))} − <i>k</i> − 1 = ${f(`(<i>k</i>+1)${Ak('k+1')}`,Ak('k'))} − <i>k</i> =`)}
+${eq(`= ${f(`(<i>k</i>+1)${Ak('k+1')} − <i>k</i>${Ak('k')}`,Ak('k'))} = ${f(`(${s('a',1)} + ⋯ + ${s('a','k+1')}) − (${s('a',1)} + ⋯ + ${s('a','k')})`,Ak('k'))} = ${f(s('a','k+1'),Ak('k'))}`)}
+<p>ЛЧ нер. Бернуллі ≥ ПЧ нер. Бернуллі, тобто</p>
+${eq(`( ${f(Ak('k+1'),Ak('k'))} )<sup>k+1</sup> ≥ ${f(s('a','k+1'),Ak('k'))}`)}
+${eq(`${f(`${A('k+1','k+1')}`,`${A('k','k+1')}`)} ≥ ${f(s('a','k+1'),Ak('k'))}. &nbsp; Помножимо обидві частини на ${A('k','k+1')}.`)}
+${eq(`${A('k+1','k+1')} ≥ ${f(`${A('k','k+1')}${s('a','k+1')}`,Ak('k'))} = ${A('k','k')}${s('a','k+1')}`)}
+<p><span class="lbl">Скористаємось припущенням індукції:</span></p>
+${eq(`${A('k+1','k+1')} ≥ ${A('k','k')}${s('a','k+1')} ≥<sup class="tip">(∗)</sup> (${s('a',1)}${s('a',2)} … ${s('a','k')})${s('a','k+1')}, &nbsp; тобто`)}
+${eq(`${A('k+1','k+1')} ≥ ${s('a',1)}${s('a',2)} … ${s('a','k')}${s('a','k+1')}, &nbsp; тобто &nbsp; ${Ak('k+1')} ≥ ${rt('k+1',`${s('a',1)}${s('a',2)} … ${s('a','k+1')}`)}, &nbsp; щ.т.д. щодо нерівностей`)}
+<div class="note"><b>з полів дошки</b>припущення індукції: ${Ak('k')} ≥ ${rt('k',`${s('a',1)}${s('a',2)} … ${s('a','k')}`)} (піднесемо обидві частини до степеня <i>k</i>) &nbsp; ${A('k','k')} ≥ ${s('a',1)}${s('a',2)} … ${s('a','k')}.</div>
+<p><span class="lbl">Тепер розберемось щодо випадку рівності:</span> для того, щоб ${Ak('k+1')} = ${rt('k+1',`${s('a',1)}${s('a',2)} … ${s('a','k+1')}`)}, в УСІХ вищезазначених переходах УСІ нерівності мають перетворюватись на рівності.</p>
+<p>Зокрема, на рівність має перетворюватись перехід (∗), тобто має виконуватись, що ${Ak('k')} = ${rt('k',`${s('a',1)}${s('a',2)} … ${s('a','k')}`)}, що, згідно припущення індукції, означає, що ${s('a',1)} = ${s('a',2)} = ⋯ = ${s('a','k')}.</p>
+<p>Але всі змінні у початковій нерівності рівноправні, тому аналогічним чином можна довести, що ${s('a',2)} = ${s('a',3)} = … ${s('a','k+1')}, тому, зрозуміло, ${s('a',1)} = ${s('a',2)} = … ${s('a','k')} = ${s('a','k+1')}, щ.т.д. ${QED}</p>
+<div class="note"><b>з полів дошки</b>саме задля цього моменту нам потрібна була база для <i>n</i> = 1 ТА <i>n</i> = 2, щоб у цьому місці було <i>k</i> ≥ 2 і можна було сказати, що ${s('a',2)} входить як у перший ланцюжок рівностей ${s('a',1)} = ${s('a',2)} = ⋯ = ${s('a','k')}, так і у другий ${s('a',2)} = ${s('a',3)} = ⋯ = ${s('a','k+1')}, а тому всі числа між собою рівні.</div>`}
+];
+
+/* ================= логіка ================= */
+const LEVELS=[
+  {n:1,data:N1,m:23,label:'означення',pick:k=>[mods(k,23),mods(k+12,23)],ex:k=>[[k,23],[k+12,23]],pts:'1 бал кожне'},
+  {n:2,data:N2,m:9, label:'приклади',  pick:k=>[mods(k,9), mods(k+5,9)], ex:k=>[[k,9],[k+5,9]],  pts:'1,5 бала кожне'},
+  {n:3,data:N3,m:7, label:'доведення (нескладне)',pick:k=>[mods(k,7)],   ex:k=>[[k,7]],          pts:'4 бали'},
+  {n:4,data:N4,m:4, label:'доведення (складне)',  pick:k=>[mods(k,4)],   ex:k=>[[k,4]],          pts:'6 балів'}
+];
+
+/* a mod* b  — залишок, але 0 замінюємо на b */
+function mods(a,b){const r=a%b; return r===0?b:r;}
+
+const $=id=>document.getElementById(id);
+const out=$('out'), calcEl=$('calc');
+
+function card(lvl,num,item){
+  return `<div class="q"><div class="qh"><span class="num">N${lvl} · №${num}</span>
+    <span class="qt">${item?item.t:'—'}</span></div>${item?item.a:''}</div>`;
+}
+
+function render(k){
+  if(!(k>=1&&k<=100)){out.innerHTML='<p class="empty">Варіант має бути числом від 1 до 100</p>';calcEl.innerHTML='';return;}
+  let html='', calc=[];
+  for(const L of LEVELS){
+    const nums=L.pick(k);
+    calc.push(nums.map((v,i)=>{const [a,b]=L.ex(k)[i];return `<code>${a} mod* ${b} = ${v}</code>`;}).join(' , '));
+    html+=`<div class="lvl">Nivel <span>${L.n}</span> — ${L.label} · ${L.pts}</div>`;
+    for(const num of nums) html+=card(L.n,num,L.data[num]);
+  }
+  calcEl.innerHTML='<b>Варіант '+k+':</b><br>'+
+    LEVELS.map((L,i)=>`Nivel ${L.n}: ${calc[i]}`).join('<br>');
+  out.innerHTML=html;
+  try{localStorage.setItem('kolok_k',k)}catch(e){}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function renderAll(){
+  let html='';
+  for(const L of LEVELS){
+    html+=`<div class="lvl">Nivel <span>${L.n}</span> — ${L.label}</div>`;
+    for(let i=1;i<=L.m;i++) html+=card(L.n,i,L.data[i]);
+  }
+  calcEl.innerHTML='<b>Усі питання</b> — повний довідник.';
+  out.innerHTML=html;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+$('go').onclick=()=>render(parseInt($('k').value,10));
+$('k').addEventListener('keydown',e=>{if(e.key==='Enter'){$('k').blur();$('go').click();}});
+$('all').onclick=renderAll;
+$('print').onclick=()=>window.print();
+
+/* розмір шрифту */
+let fs=17;
+const setFs=d=>{fs=Math.min(26,Math.max(13,fs+d));document.documentElement.style.setProperty('--fs',fs+'px');
+  try{localStorage.setItem('kolok_fs',fs)}catch(e){}};
+$('fplus').onclick=()=>setFs(1);
+$('fminus').onclick=()=>setFs(-1);
+
+/* таймер 7 хв */
+let left=420, tid=null;
+const tEl=$('timer');
+const show=()=>{const m=Math.floor(left/60),s2=String(left%60).padStart(2,'0');
+  tEl.textContent=`${m}:${s2}`; tEl.classList.toggle('hot',left<=60);};
+$('tstart').onclick=()=>{
+  if(tid){clearInterval(tid);tid=null;left=420;show();$('tstart').textContent='▶ Таймер 7 хв';return;}
+  left=420;show();$('tstart').textContent='⏹ Скинути';
+  tid=setInterval(()=>{left--;show();if(left<=0){clearInterval(tid);tid=null;tEl.textContent='ЧАС!';}},1000);
+};
+
+/* офлайн-режим: реєструємо service worker, якщо сторінка віддається по http(s).
+   З file:// це неможливо — там сторінка й так локальна, тому мовчки пропускаємо. */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')
+   && !location.hostname.endsWith('claude.ai')){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+/* відновлення */
+try{
+  const sf=parseInt(localStorage.getItem('kolok_fs'),10);
+  if(sf){fs=sf;document.documentElement.style.setProperty('--fs',fs+'px');}
+  const sk=parseInt(localStorage.getItem('kolok_k'),10);
+  if(sk>=1&&sk<=100){$('k').value=sk;render(sk);}
+}catch(e){}
+</script>
+</body>
+</html>
