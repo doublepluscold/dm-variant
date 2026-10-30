@@ -1,5 +1,5 @@
 /* Офлайн-кеш. Змінити CACHE при оновленні сторінки. */
-const CACHE = 'kolok-v1';
+const CACHE = 'kolok-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
