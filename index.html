@@ -103,6 +103,11 @@ button{min-height:44px}
 #tstart{font-variant-numeric:tabular-nums;font-weight:700;background:var(--acc-soft);color:var(--acc);
   border-color:transparent;white-space:nowrap}
 #tstart.hot{background:#ffe0e0;color:#b3261e}
+/* плаваючий таймер: видно, коли основна кнопка пішла за край екрана */
+.tfloat{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:20;
+  font-variant-numeric:tabular-nums;font-weight:700;padding:0 20px;border-radius:999px;white-space:nowrap;
+  border:1.5px solid var(--acc);background:var(--card);color:var(--acc);box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.tfloat.hot{background:#ffe0e0;color:#b3261e;border-color:#b3261e}
 .hint{color:var(--mut);font-size:.82rem;margin:8px 2px 0}
 
 /* ---- cards ---- */
@@ -236,6 +241,7 @@ footer{color:var(--mut);font-size:.8rem;text-align:center;margin-top:34px;line-h
 <div id="list" hidden></div>
 
 <button class="fab noprint" id="totop" aria-label="Нагору" hidden>↑</button>
+<button class="tfloat noprint" id="tfloat" aria-label="Таймер 7 хвилин" hidden></button>
 
 <div class="egg noprint" aria-hidden="true">
   <div class="r1">I <b>♥</b></div>
@@ -881,6 +887,7 @@ function showTab(all){
   $('pane-all').hidden=!all; list.hidden=!all;
   if(all&&!list.innerHTML) renderList();
   window.scrollTo(0,0);
+  updFl();
 }
 $('tab-var').onclick=()=>showTab(false);
 $('tab-all').onclick=()=>showTab(true);
@@ -933,6 +940,17 @@ tBtn.onclick=()=>{
   tid=setInterval(()=>{left--;show();
     if(left<=0){clearInterval(tid);tid=null;tEl.textContent='ЧАС!';tIc.textContent='↺';}},1000);
 };
+
+/* плаваючий таймер дзеркалить основну кнопку */
+const tFl=$('tfloat');
+const syncFl=()=>{tFl.innerHTML=tBtn.innerHTML.replace(' id="timer"','');tFl.classList.toggle('hot',tBtn.classList.contains('hot'));};
+new MutationObserver(syncFl).observe(tBtn,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:['class']});
+syncFl();
+tFl.onclick=()=>tBtn.click();
+/* показуємо, коли основна кнопка поїхала вище краю екрана; на вкладці «Усі питання» — ніколи */
+const updFl=()=>{tFl.hidden=$('pane-var').hidden||tBtn.getBoundingClientRect().bottom>0;};
+addEventListener('scroll',updFl,{passive:true});
+addEventListener('resize',updFl);
 
 /* офлайн-режим: реєструємо service worker, якщо сторінка віддається по http(s).
    З file:// це неможливо — там сторінка й так локальна, тому мовчки пропускаємо. */
